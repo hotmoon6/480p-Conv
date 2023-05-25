@@ -1,6 +1,0 @@
-services:
-  - name: web
-    port: 5000
-    build:
-      env: python Dockerfile
-
