@@ -1,46 +1,23 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Video Conversion</title>
+    <title>Video Converter</title>
 </head>
 <body>
-  <h1>Video Conversion</h1>
-  <form id="conversionForm">
-    <label for="videoUrl">Video URL:</label>
-    <input type="text" id="videoUrl" name="videoUrl" placeholder="Enter video URL" required>
-    <button type="submit">Convert</button>
-  </form>
-  <div id="result" style="display: none;">
-    <h2>Conversion Result:</h2>
-    <a id="downloadLink" href="" download>Download Converted Video</a>
-  </div>
+    <h1>Video Converter</h1>
 
-  <script>
-    document.getElementById('conversionForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
 
-      const videoUrl = document.getElementById('videoUrl').value;
+    <form method="POST" action="/convert">
+        <input type="text" name="video_url" placeholder="Enter video URL">
+        <br>
+        <input type="submit" value="Convert">
+    </form>
 
-      const response = await fetch('/convert', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ videoUrl })
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        const downloadLink = document.getElementById('downloadLink');
-        downloadLink.href = result.downloadUrl;
-        document.getElementById('result').style.display = 'block';
-      } else {
-        alert(result.error);
-      }
-    });
-  </script>
+    {% if converted_file %}
+        <a href="/download/{{ converted_file }}">Download Converted Video</a>
+    {% endif %}
 </body>
 </html>
-
