@@ -2,7 +2,6 @@ import os
 import subprocess
 import requests
 from flask import Flask, render_template, request
-
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
@@ -23,19 +22,10 @@ def convert_video(input_file):
     subprocess.run(command, capture_output=True)
     return output_file
 
-def authenticate():
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-
-    # Get the authentication URL
-    auth_url = gauth.GetAuthUrl()
-
-    # Display the authentication URL to the webpage
-    return auth_url
-
 def upload_to_drive(file_path):
     gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
+    gauth.CommandLineAuth()
+
     drive = GoogleDrive(gauth)
 
     # Create a new file on Google Drive
@@ -55,11 +45,7 @@ def upload_to_drive(file_path):
 
 @app.route('/')
 def index():
-    # Get the authentication URL
-    auth_url = authenticate()
-
-    # Render the index template with the authentication URL
-    return render_template('index.html', auth_url=auth_url)
+    return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -83,3 +69,4 @@ def upload():
 
 if __name__ == '__main__':
     app.run()
+
