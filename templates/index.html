@@ -5,9 +5,21 @@
 </head>
 <body>
     <h1>Video Upload</h1>
+    
+    {% if auth_url %}
+        <p>Click the button below to authorize access to your Google Drive:</p>
+        <a href="{{ auth_url }}" class="button">Authorize</a>
+    {% else %}
+        <p>Authorization URL not available.</p>
+    {% endif %}
+    
+    <hr>
+    
+    <h2>Upload Video</h2>
     <form action="/upload" method="post">
         <label for="video_url">Video URL:</label>
-        <input type="text" name="video_url" id="video_url">
+        <input type="text" name="video_url" id="video_url" required>
+        <br>
         <input type="submit" value="Upload">
     </form>
 </body>
