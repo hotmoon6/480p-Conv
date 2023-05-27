@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import requests
 from flask import Flask, render_template, request
 from pydrive.auth import GoogleAuth
@@ -24,7 +25,7 @@ def convert_video(input_file):
 
 def upload_to_drive(file_path):
     gauth = GoogleAuth()
-    gauth.CommandLineAuth()
+    gauth.CommandLineAuth(sys.argv)
 
     drive = GoogleDrive(gauth)
 
@@ -69,4 +70,3 @@ def upload():
 
 if __name__ == '__main__':
     app.run()
-
