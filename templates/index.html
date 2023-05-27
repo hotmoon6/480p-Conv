@@ -1,23 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Video Converter</title>
+    <title>Video Upload</title>
 </head>
 <body>
-    <h1>Video Converter</h1>
-
-    {% if message %}
-        <p>{{ message }}</p>
-    {% endif %}
-
-    <form method="POST" action="/convert">
-        <input type="text" name="video_url" placeholder="Enter video URL">
-        <br>
-        <input type="submit" value="Convert">
+    <h1>Video Upload</h1>
+    <form action="/upload" method="post">
+        <label for="video_url">Video URL:</label>
+        <input type="text" name="video_url" id="video_url">
+        <input type="submit" value="Upload">
     </form>
-
-    {% if converted_file %}
-        <a href="/download/{{ converted_file }}">Download Converted Video</a>
-    {% endif %}
 </body>
 </html>
