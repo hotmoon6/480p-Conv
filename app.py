@@ -23,6 +23,16 @@ def convert_video(input_file):
     subprocess.run(command, capture_output=True)
     return output_file
 
+def authenticate():
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+
+    # Get the authentication URL
+    auth_url = gauth.GetAuthUrl()
+
+    # Display the authentication URL to the webpage
+    return auth_url
+
 def upload_to_drive(file_path):
     gauth = GoogleAuth()
     gauth.LocalWebserverAuth()
@@ -45,7 +55,11 @@ def upload_to_drive(file_path):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Get the authentication URL
+    auth_url = authenticate()
+
+    # Render the index template with the authentication URL
+    return render_template('index.html', auth_url=auth_url)
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -69,4 +83,3 @@ def upload():
 
 if __name__ == '__main__':
     app.run()
-
