@@ -1,54 +1,72 @@
-from flask import Flask, render_template, request, send_file
-from werkzeug.utils import secure_filename
 import os
-import ffmpeg
+import subprocess
 import requests
+from flask import Flask, render_template, request
+
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 app = Flask(__name__)
-app.config['CONVERTED_FOLDER'] = 'converted'
+
+def download_video(url):
+    response = requests.get(url, stream=True)
+    file_name = 'input_video.mp4'  # Name of the downloaded video file
+    with open(file_name, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
+    return file_name
+
+def convert_video(input_file):
+    output_file = 'output_video.mp4'  # Name of the converted video file
+    command = ['ffmpeg', '-i', input_file, '-vf', 'scale=854:480', '-c:a', 'copy', output_file]
+    subprocess.run(command, capture_output=True)
+    return output_file
+
+def upload_to_drive(file_path):
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+    drive = GoogleDrive(gauth)
+
+    # Create a new file on Google Drive
+    file_drive = drive.CreateFile()
+
+    # Set the title of the file
+    file_drive['title'] = os.path.basename(file_path)
+
+    # Set the content of the file
+    file_drive.SetContentFile(file_path)
+
+    # Upload the file to Google Drive
+    file_drive.Upload()
+
+    # Get the URL of the uploaded file
+    return file_drive['alternateLink']
 
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
-@app.route('/convert', methods=['POST'])
-def convert():
-    # Get the video URL from the form
+@app.route('/upload', methods=['POST'])
+def upload():
     video_url = request.form.get('video_url')
 
-    # Check if a video URL was provided
-    if not video_url:
-        return render_template('index.html', message='No video URL provided')
-
-    # Download the video from the URL
-    response = requests.get(video_url)
-    if response.status_code != 200:
-        return render_template('index.html', message='Failed to download video from the provided URL')
-
-    # Save the downloaded video to a file
-    filename = secure_filename('video.mp4')
-    video_path = os.path.join(app.config['CONVERTED_FOLDER'], filename)
-    with open(video_path, 'wb') as file:
-        file.write(response.content)
+    # Download the video
+    input_file = download_video(video_url)
 
     # Convert the video to 480p
-    converted_filename = f"converted_{filename}"
-    converted_path = os.path.join(app.config['CONVERTED_FOLDER'], converted_filename)
-    ffmpeg.input(video_path).output(converted_path, vf='scale=854:480').run()
+    output_file = convert_video(input_file)
 
-    # Provide the download link to the converted video
-    return render_template('index.html', converted_file=converted_filename)
+    # Upload the converted video to Google Drive and get the URL
+    uploaded_url = upload_to_drive(output_file)
 
-@app.route('/download/<path:filename>')
-def download(filename):
-    converted_path = os.path.join(app.config['CONVERTED_FOLDER'], filename)
+    # Clean up the temporary files
+    os.remove(input_file)
+    os.remove(output_file)
 
-    # Check if the file exists
-    if not os.path.isfile(converted_path):
-        return render_template('index.html', message='File not found')
-
-    # Send the file for download
-    return send_file(converted_path, as_attachment=True)
+    # Render the result template with the uploaded URL
+    return render_template('result.html', uploaded_url=uploaded_url)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run()
+
